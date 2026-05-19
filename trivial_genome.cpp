@@ -173,5 +173,30 @@ int main(int argc, char* argv[]) {
     out.close();
     cout << "Restored genome saved to restored_genome_trivial.txt" << endl;
 
+    // save log to file
+    int readLen = reads.empty() ? 0 : (int)reads[0].size();
+    int snpCorrect = 0, snpTotal = snps.size();
+    for (const SNP& snp : snps)
+        if (snp.index < (int)reconstructed.size() && reconstructed[snp.index] == snp.variant)
+            snpCorrect++;
+
+    ofstream log("trivial_log.txt", ios::app);
+    log << "=== Trivial Mapping Algorithm ===" << endl;
+    log << "Reference length: " << reference.size() << endl;
+    log << "Read length:      " << readLen << endl;
+    log << "Number of reads:  " << reads.size() << endl;
+    log << "Number of SNPs:   " << snpTotal << endl;
+    log << "Threshold:        " << threshold << endl;
+    log << "Mapped reads:     " << mapped << endl;
+    log << "Unmapped reads:   " << unmapped << endl;
+    log << "Covered positions: " << covered << " / " << reference.size() << endl;
+    log << "Overall accuracy:  " << accuracy << "%" << endl;
+    log << "SNP accuracy:      " << snpCorrect << " / " << snpTotal
+        << " (" << (snpTotal ? (double)snpCorrect/snpTotal*100.0 : 0.0) << "%)" << endl;
+    log << "Elapsed time:      " << elapsed << "ms" << endl;
+    log << endl;
+    log.close();
+    cout << "Log saved to trivial_log.txt" << endl;
+
     return 0;
 }
