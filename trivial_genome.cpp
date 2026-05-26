@@ -138,7 +138,8 @@ int main(int argc, char* argv[]) {
     vector<string> reads = readReads(argv[2]);
     string variant       = readSingleLine(argv[3]);
     vector<SNP> snps     = readSNPLog(argv[4]);
-    const int threshold  = 2;
+    int readLen          = reads.empty() ? 0 : (int)reads[0].size();
+    const int threshold  = max(1, (int)round(readLen / 12.0));
 
     cout << "=== Trivial Mapping Algorithm ===" << endl;
     cout << "Reference length: " << reference.size() << endl;
@@ -174,16 +175,28 @@ int main(int argc, char* argv[]) {
     cout << "Restored genome saved to restored_genome_trivial.txt" << endl;
 
     // save log to file
-    int readLen = reads.empty() ? 0 : (int)reads[0].size();
     int snpCorrect = 0, snpTotal = snps.size();
     for (const SNP& snp : snps)
         if (snp.index < (int)reconstructed.size() && reconstructed[snp.index] == snp.variant)
             snpCorrect++;
 
+    // count existing trials for this L to assign trial number
+    int trialNum = 1;
+    ifstream logIn("trivial_log.txt");
+    if (logIn) {
+        string line;
+        while (getline(logIn, line))
+            if (line.find("Read length:") != string::npos &&
+                line.find(to_string(readLen)) != string::npos)
+                trialNum++;
+        logIn.close();
+    }
+
     ofstream log("trivial_log.txt", ios::app);
     log << "=== Trivial Mapping Algorithm ===" << endl;
-    log << "Reference length: " << reference.size() << endl;
     log << "Read length:      " << readLen << endl;
+    log << "Trial:            " << trialNum << endl;
+    log << "Reference length: " << reference.size() << endl;
     log << "Number of reads:  " << reads.size() << endl;
     log << "Number of SNPs:   " << snpTotal << endl;
     log << "Threshold:        " << threshold << endl;
@@ -196,7 +209,7 @@ int main(int argc, char* argv[]) {
     log << "Elapsed time:      " << elapsed << "ms" << endl;
     log << endl;
     log.close();
-    cout << "Log saved to trivial_log.txt" << endl;
+    cout << "Log saved to trivial_log.txt (Trial " << trialNum << ")" << endl;
 
     return 0;
 }
