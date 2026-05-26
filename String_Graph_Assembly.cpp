@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <fstream>
+#include <ctime>
 
 using namespace std;
 
@@ -50,6 +51,10 @@ string assemble(vector<string> reads) {
 }
 
 int main() {
+    clock_t start, finish;
+    double duration;
+    start = clock();
+
     vector<string> reads;
     ifstream infile("reads_shuffled.txt");
     string line;
@@ -59,9 +64,46 @@ int main() {
         }
     }
     infile.close();
+    // 예측한 정답
     string genome = assemble(reads);
     cout << "===== Assembled Genome (String Graph style =====" << endl;
     cout << genome << endl;
+
+    finish = clock();
+    duration = (double)(finish - start) / CLOCKS_PER_SEC;
+    cout << duration << "초" << endl;
+
+    // assembled_genome.txt 남겨놓기
+    ofstream outfile("assembled_genome.txt");
+    if (outfile.is_open()) {
+        outfile << genome;
+        outfile.close();
+    }
+    else {
+        cout << "파일을 열 수 없습니다." << endl;
+    }
+
+    // 실제 정답
+    string answer_genome;
+    ifstream infile_answer("variant.txt");
+    getline(infile_answer, answer_genome);
+    infile_answer.close();
+
+    // 정확도 계산
+    int len1 = genome.length();
+    int len2 = answer_genome.length();
+    int min_len = min(len1, len2);
+    int mismatch = 0;
+
+    for (int i = 0; i < min_len; i++) {
+        if (genome[i] != answer_genome[i])
+            mismatch++;
+    }
+    int total = min_len;
+    double accuracy = ((double)(total - mismatch) / total) * 100.0;
+    cout << "Mismatch count: " << mismatch << endl;
+    cout << "Accuracy: " << accuracy << "%" << endl;
+    
 
     return 0;
 }
