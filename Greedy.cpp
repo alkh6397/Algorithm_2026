@@ -7,15 +7,17 @@
 using namespace std;
 using namespace std::chrono;
 
-//µÎ ¹®ÀÚ¿­ÀÇ ÃÖ´ë overlap ±æÀÌ °è»ê ÇÔ¼ö
+const int MIN_OVERLAP = 5;
+
+//ë‘ ë¬¸ìì—´ì˜ ìµœëŒ€ overlap ê¸¸ì´ ê³„ì‚° í•¨ìˆ˜
 int get_overlap(const string& a, const string& b) {
 
 	int max_overlap = 0;
 
 	int minlen = min(a.size(), b.size());
-	for (int len = 1; len <= minlen; len++) {
+	for (int len = MIN_OVERLAP; len <= minlen; len++) {
 
-		//aÀÇ suffix == bÀÇ prefix ??
+		//aì˜ suffix == bì˜ prefix ??
 		if (a.substr(a.size() - len) == b.substr(0, len)) {
 			max_overlap = len;
 		}
@@ -26,22 +28,22 @@ int get_overlap(const string& a, const string& b) {
 
 int main() {
 
-	//reads ÀúÀå¿ë vector
+	//reads ì €ì¥ìš© vector
 	vector <string> reads;
 
-	//ÆÄÀÏ ¿­±â
+	//íŒŒì¼ ì—´ê¸°
 	ifstream fin;
-	fin.open("C:\\Users\\À¯¼º\\Desktop\\Seed_Creater\\Seed_Data\\reads_shuffled.txt");
+	fin.open("C:\\Users\\ìœ ì„±\\Desktop\\Seed_Creater\\Seed_Data\\reads_shuffled.txt");
 
-	//ÆÄÀÏ ¿­±â ½ÇÆĞ½Ã
+	//íŒŒì¼ ì—´ê¸° ì‹¤íŒ¨ì‹œ
 	if (!fin.is_open()) {
-		cout << "ÆÄÀÏ ¿­±â ½ÇÆĞ\n";
+		cout << "íŒŒì¼ ì—´ê¸° ì‹¤íŒ¨\n";
 		return 1;
 	}
 
 	string line;
 
-	//reads vector¿¡ reads °ªµéÀ» ÀúÀå
+	//reads vectorì— reads ê°’ë“¤ì„ ì €ì¥
 	while (getline(fin, line)) {
 
 		if (line.empty()) continue;
@@ -51,11 +53,11 @@ int main() {
 
 	fin.close();
 
-	//ÃÊ±â Read ±æÀÌ ÃøÁ¤¿ë String
+	//ì´ˆê¸° Read ê¸¸ì´ ì¸¡ì •ìš© String
 	string L = reads[0];
 
-	cout << "ÃÑ ÀĞ¾î¿Â reads °¹¼ö: " << reads.size() << endl;
-	cout << "Å½»öÀ» ½ÃÀÛÇÕ´Ï´Ù. Àá½Ã¸¸ ±â´Ù·ÁÁÖ¼¼¿ä ...\n" << endl;
+	cout << "ì´ ì½ì–´ì˜¨ reads ê°¯ìˆ˜: " << reads.size() << endl;
+	cout << "íƒìƒ‰ì„ ì‹œì‘í•©ë‹ˆë‹¤. ì ì‹œë§Œ ê¸°ë‹¤ë ¤ì£¼ì„¸ìš” ...\n" << endl;
 
 	int total_reads = reads.size();
 
@@ -63,8 +65,8 @@ int main() {
 
 	while (reads.size() > 1) {
 
-		int bestI = 0;
-		int bestJ = 0;
+		int bestI = -1;
+		int bestJ = -1;
 		int best_overlap = -1;
 
 		for (int i = 0; i < reads.size(); i++) {
@@ -74,6 +76,10 @@ int main() {
 
 				int overlap = get_overlap(reads[i], reads[j]);
 
+				if (overlap < MIN_OVERLAP) {
+					continue;
+				}
+
 				if (overlap > best_overlap) {
 					best_overlap = overlap;
 					bestI = i;
@@ -82,22 +88,27 @@ int main() {
 			}
 		}
 
+		if (bestI == -1 || bestJ == -1) {
+			cout << "\n[ì•Œë¦¼] ë” ì´ìƒ " << MIN_OVERLAP << "bp ì´ìƒ ê²¹ì¹˜ëŠ” ì¡°ê°ì´ ì—†ì–´ ì¡°ë¦½ì„ ì¡°ê¸° ì¢…ë£Œí•©ë‹ˆë‹¤." << endl;
+			break;
+		}
+
 		string merged = reads[bestI] + reads[bestJ].substr(best_overlap);
 
 		if (reads.size() % 10 == 0) {
-			cout << "\r[ÁøÇà »óÈ²] ³²Àº Á¶°¢: " << reads.size() << " / " << total_reads
-				<< " | ÇöÀç °áÇÕµÈ ÃÖ´ë ±æÀÌ: " << merged.size() << " bp    " << flush;
+			cout << "\r[ì§„í–‰ ìƒí™©] ë‚¨ì€ ì¡°ê°: " << reads.size() << " / " << total_reads
+				<< " | í˜„ì¬ ê²°í•©ëœ ìµœëŒ€ ê¸¸ì´: " << merged.size() << " bp    " << flush;
 		}
 
-		//´õ Å« °ªÀ» µÚÂÊ ÀÎµ¦½º·Î ¿Å±â±â
+		//ë” í° ê°’ì„ ë’¤ìª½ ì¸ë±ìŠ¤ë¡œ ì˜®ê¸°ê¸°
 		if (bestI > bestJ)
 			swap(bestI, bestJ);
 
-		//ÀÎµ¦½º È¥¶õÀ» ¸·±â À§ÇØ µÚÂÊ ÀÎµ¦½ººÎÅÍ »èÁ¦
+		//ì¸ë±ìŠ¤ í˜¼ë€ì„ ë§‰ê¸° ìœ„í•´ ë’¤ìª½ ì¸ë±ìŠ¤ë¶€í„° ì‚­ì œ
 		reads.erase(reads.begin() + bestJ);
 		reads.erase(reads.begin() + bestI);
 
-		//°áÇÕÇÑ read Ãß°¡ÇÏ±â
+		//ê²°í•©í•œ read ì¶”ê°€í•˜ê¸°
 		reads.push_back(merged);
 
 	}
@@ -105,10 +116,10 @@ int main() {
 	auto end_time = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(end_time - start_time);
 
-	cout << "\r[ÁøÇà »óÈ²] ³²Àº Á¶°¢: 1 / " << total_reads
-		<< " | ÇöÀç °áÇÕµÈ ÃÖ´ë ±æÀÌ: " << reads[0].size() << " bp          " << flush;
+	cout << "\r[ì§„í–‰ ìƒí™©] ë‚¨ì€ ì¡°ê°: 1 / " << total_reads
+		<< " | í˜„ì¬ ê²°í•©ëœ ìµœëŒ€ ê¸¸ì´: " << reads[0].size() << " bp          " << flush;
 
-	cout << "\n\nÁ¶¸³ ¿Ï·á!\n" << endl;
+	cout << "\n\nì¡°ë¦½ ì™„ë£Œ!\n" << endl;
 
 	/*
 	cout << "\nFinal Genome: \n";
@@ -116,19 +127,19 @@ int main() {
 	*/
 
 
-	//Á¶ÇÕµÈ reads¸¦ stringÇü½ÄÀ¸·Î ÀúÀå
+	//ì¡°í•©ëœ readsë¥¼ stringí˜•ì‹ìœ¼ë¡œ ì €ì¥
 	string Merged_reads = reads[0];
 
-	//Á¶ÇÕÇØ¾ßÇÒ ¸ñÇ¥ Genome ÆÄÀÏ open
+	//ì¡°í•©í•´ì•¼í•  ëª©í‘œ Genome íŒŒì¼ open
 	ifstream Goal_Gene;
-	Goal_Gene.open("C:\\Users\\À¯¼º\\Desktop\\Seed_Creater\\Seed_Data\\variant.txt");
+	Goal_Gene.open("C:\\Users\\ìœ ì„±\\Desktop\\Seed_Creater\\Seed_Data\\variant.txt");
 
 	if (!Goal_Gene.is_open()) {
-		cout << "ÆÄÀÏ ¿­±â ½ÇÆĞ\n";
+		cout << "íŒŒì¼ ì—´ê¸° ì‹¤íŒ¨\n";
 		return 1;
 	}
 
-	//¸ñÇ¥ GenomeÀ» ÀúÀåÇÒ GoalGene string
+	//ëª©í‘œ Genomeì„ ì €ì¥í•  GoalGene string
 	string GoalGene, line2;
 
 	while (getline(Goal_Gene, line2)) {
@@ -147,7 +158,7 @@ int main() {
 	int diff = 0;	int match_count = 0;
 	int min_len = min(GoalGene.size(), Merged_reads.size());
 
-	//¸ñÇ¥ Genome°ú Á¶ÇÕÇÑ Reads ºñ±³¿ë ¹İº¹¹®. ´Ù¸£´Ù¸é ´Ù¸¥ ÀÎµ¦½º¿Í ¿ø¼Ò Ãâ·Â
+	//ëª©í‘œ Genomeê³¼ ì¡°í•©í•œ Reads ë¹„êµìš© ë°˜ë³µë¬¸. ë‹¤ë¥´ë‹¤ë©´ ë‹¤ë¥¸ ì¸ë±ìŠ¤ì™€ ì›ì†Œ ì¶œë ¥
 	for (int i = 0; i < min_len; i++) {
 		if (Merged_reads[i] != GoalGene[i]) {
 			diff++;
@@ -163,19 +174,19 @@ int main() {
 	double accuracy = (double)match_count / GoalGene.size() * 100.0;
 
 	if (diff == 0 && length_diff == 0) {
-		cout << "¿øº»°ú ÀÏÄ¡ÇÕ´Ï´Ù.\n" << endl;
+		cout << "ì›ë³¸ê³¼ ì¼ì¹˜í•©ë‹ˆë‹¤.\n" << endl;
 	}
 	else {
-		cout << "ÃÑ " << diff << "°³ÀÇ ¿°±â°¡ ´Ù¸£°Ô Á¶ÇÕµÇ¾ú½À´Ï´Ù.(±æÀÌ Â÷ÀÌ Æ÷ÇÔ)\n" << endl;
+		cout << "ì´ " << diff << "ê°œì˜ ì—¼ê¸°ê°€ ë‹¤ë¥´ê²Œ ì¡°í•©ë˜ì—ˆìŠµë‹ˆë‹¤.(ê¸¸ì´ ì°¨ì´ í¬í•¨)\n" << endl;
 	}
 
-	cout << "ÀüÃ¼ GenomeÀÇ ±æÀÌ(N): " << GoalGene.size() << endl;
-	cout << "ReadsÀÇ °³¼ö: " << total_reads << endl;
-	cout << "ReadÀÇ ±æÀÌ(L): " << L.size() << endl;
-	cout << "SNP ºñÀ²: 0.5\n" << endl;
+	cout << "ì „ì²´ Genomeì˜ ê¸¸ì´(N): " << GoalGene.size() << endl;
+	cout << "Readsì˜ ê°œìˆ˜: " << total_reads << endl;
+	cout << "Readì˜ ê¸¸ì´(L): " << L.size() << endl;
+	cout << "SNP ë¹„ìœ¨: 0.05\n" << endl;
 
-	cout << "ÃÖÁ¾ Á¶ÇÕ Á¤È®µµ: " << accuracy << "%" << endl;
-	cout << "**¾Ë°í¸®Áò ½ÇÇà ½Ã°£: " << duration.count() << " ms (" << duration.count() / 1000.0 << " ÃÊ)**" << endl;
+	cout << "ìµœì¢… ì¡°í•© ì •í™•ë„: " << accuracy << "%" << endl;
+	cout << "**ì•Œê³ ë¦¬ì¦˜ ì‹¤í–‰ ì‹œê°„: " << duration.count() << " ms (" << duration.count() / 1000.0 << " ì´ˆ)**" << endl;
 
 	return 0;
 }
