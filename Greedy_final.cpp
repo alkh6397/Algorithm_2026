@@ -15,7 +15,7 @@ int get_overlap(const string& a, const string& b) {
 	int max_overlap = 0;
 
 	int minlen = min(a.size(), b.size());
-	for (int len = MIN_OVERLAP; len <= minlen; len++) {
+	for (int len = 1; len <= minlen; len++) {
 
 		//a의 suffix == b의 prefix ??
 		if (a.substr(a.size() - len) == b.substr(0, len)) {
@@ -63,6 +63,8 @@ int main() {
 
 	auto start_time = high_resolution_clock::now();
 
+	int current_min_overlap = MIN_OVERLAP;
+
 	while (reads.size() > 1) {
 
 		int bestI = -1;
@@ -76,7 +78,7 @@ int main() {
 
 				int overlap = get_overlap(reads[i], reads[j]);
 
-				if (overlap < MIN_OVERLAP) {
+				if (overlap < current_min_overlap) {
 					continue;
 				}
 
@@ -89,8 +91,14 @@ int main() {
 		}
 
 		if (bestI == -1 || bestJ == -1) {
-			cout << "\n[알림] 더 이상 " << MIN_OVERLAP << "bp 이상 겹치는 조각이 없어 조립을 조기 종료합니다." << endl;
-			break;
+			if (current_min_overlap > 1) {
+				current_min_overlap--;
+				continue;
+			}
+			else {
+				cout << "\n[알림] 더 이상 겹치는 조각이 없어 조립을 조기 종료합니다.\n" << endl;
+				break;
+			}
 		}
 
 		string merged = reads[bestI] + reads[bestJ].substr(best_overlap);
